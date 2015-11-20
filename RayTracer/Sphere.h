@@ -4,27 +4,32 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include "Object.h"
+#include "Intersection.h"
 
 class Sphere : public Object{
 private:
 public:
 	glm::vec3 sphereColor;
-	glm::mat4 xForm = glm::mat4(1);
-	float intersect(Ray ray, glm::vec3 &color){
-		glm::mat4 ixForm = glm::inverse(xForm);
+	glm::mat4 xForm;
+	glm::mat4 ixForm;
+	glm::mat4 ixtForm;
+	Intersection intersect(Ray ray){
+		Intersection isec;
+
 		glm::vec4 v = ixForm*ray.direction;
 		glm::vec4 u = ixForm*ray.point;
+		glm::vec3 v3 = glm::vec3(v);
+		glm::vec3 u3 = glm::vec3(u);
 
-		float a = glm::dot(glm::vec3(v), glm::vec3(v));
-		float b = 2 * glm::dot(glm::vec3(u), glm::vec3(v));
-		float c = glm::dot(glm::vec3(u), glm::vec3(u)) - 1;
+		float a = glm::dot(v3, v3);
+		float b = 2 * glm::dot(u3, v3);
+		float c = glm::dot(u3, u3) - 1;
 
-		//std::cout << "calling intersect!\n";
 
 		float b2 = b*b;
 		float ac4 = 4 * a*c;
 
-		if (b2 <= ac4) return -1;
+		if (b2 <= ac4) return isec;
 		if (b < 0) b = b * -1;
 
 		float root = sqrt(b2- ac4);
@@ -37,16 +42,22 @@ public:
 			if (t2 < 0);
 			else{
 				glm::vec4 intersectPoint = u + v*t2;
-				color = glm::vec3(glm::transpose(ixForm)*intersectPoint);
-				return t2;
+				isec.point = xForm*intersectPoint;
+				isec.normal = ixtForm*intersectPoint;
+				isec.distance = t2;
+				return isec;
 			}
 		}
 		else{
 			glm::vec4 intersectPoint = u + v*t1;
-			color = glm::vec3(glm::transpose(ixForm)*intersectPoint);
-			return t1;
+			isec.point = xForm*intersectPoint;
+			isec.normal = ixtForm*intersectPoint;
+			isec.distance = t1;
+			return isec;
+
+
 		}
-		return -1;
+		return isec;
 	}
 };
 

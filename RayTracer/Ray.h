@@ -1,4 +1,4 @@
-#include <glm/vec4.hpp>
+#include <glm/glm.hpp>
 
 #ifndef RAY_H
 #define RAY_H

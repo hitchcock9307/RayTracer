@@ -4,6 +4,7 @@
 #include "Triangle.h"
 #include "Light.h"
 #include "Viewport.h"
+#include "Intersection.h"
 
 #include <iostream>
 #include <vector>
@@ -20,7 +21,7 @@ class Tracer{
 private:
 
 public:
-	std::vector<Light> lights;
+	std::vector<Light*> lights;
 	std::vector<Object*> objects;
 	glm::vec4 cameraLoc = glm::vec4(0, 0, 1, 1);
 	Viewport view;
@@ -29,61 +30,85 @@ public:
 		float pixWidth = (2 * view.d) / view.width;
 		float halfWidth = view.d / view.height;
 
-		float yCur = halfWidth - view.d/2;
+		float yCur = halfWidth + view.d/2;
 		float xCur = halfWidth - view.d/2;
 
-		//Sphere newSphere;
-		//newSphere.xForm = glm::translate(newSphere.xForm, glm::vec3(0, 0, -7));
-		//newSphere.sphereColor = glm::vec3(1, 1, .1);
-		//objects.push_back(&newSphere);
 
 		Sphere newSphere2;
 		newSphere2.sphereColor = glm::vec3(1, 0, 0);
-		//newSphere2.xForm = glm::scale(newSphere2.xForm, glm::vec3(.5, .5, .5));
-		newSphere2.xForm = glm::translate(newSphere2.xForm, glm::vec3(0, 0, -1));
+		newSphere2.xForm = glm::translate(glm::mat4(1) , glm::vec3(0, 0, -5));
+		newSphere2.ixForm = glm::inverse(newSphere2.xForm);
+		newSphere2.ixtForm = glm::transpose(newSphere2.ixForm);
 		objects.push_back(&newSphere2);
 
+		Light testLight;
+		testLight.color = glm::vec3(1, 1, 1); 
+		testLight.pos = glm::vec4(0, 1, 1, 1);
+		lights.push_back(&testLight);
+
+		glm::vec4 pointLoc = glm::vec4(xCur, yCur, 0.0f, 1.0f);
 
 		for (int x = 0; x < view.width; x++){
 			for (int y = 0; y < view.height; y++){
-				glm::vec4 pointLoc = glm::vec4(xCur, yCur, 0.0f, 1.0f);
 				glm::vec4 dir = pointLoc - cameraLoc;
 
-				//printVec3(glm::vec3(pointLoc));
-				
 				Ray ray;
 				ray.direction = dir;
-				ray.point = pointLoc;
+				ray.point =  pointLoc;
 
-				float smallestIntersect = (float)view.clipDistance;
-				glm::vec3 finColor = view.backColor;
+				glm::vec3 color;
+
+				Intersection sIntersect;
+				Intersection cIntersect;
+				Object* iObj = NULL;
+
+				sIntersect.distance = view.clipDistance;
+
 				for (Object* o : objects){
-					glm::vec3 color;
-					float intersect = o->intersect(ray, color);
-					if ( intersect > 0){
-						if (intersect < smallestIntersect){
-							//std::cout << "intersect " << x*view.width + y << std::endl;
-							smallestIntersect = intersect;
-							finColor = color;
+					cIntersect = o->intersect(ray);
+					if ( cIntersect.distance > 0){
+						if (cIntersect.distance < sIntersect.distance){
+							sIntersect = cIntersect;
+							iObj = o;
+							color = glm::vec3(.2, .2, .2);
 						}
 					}
 				}
 
-				view.setPixel(x, y, finColor);
-				yCur += halfWidth;
+				for (Light* l : lights){
+					if (iObj == NULL) break;
+					glm::vec3 L = glm::normalize(glm::vec3(l->pos - sIntersect.normal));
+					glm::vec3 V = glm::normalize(glm::vec3(cameraLoc - sIntersect.normal));
+					glm::vec3 N = glm::normalize(glm::vec3(sIntersect.normal));
+					glm::vec3 H = glm::normalize(L + V);
+					glm::vec3 Cl = l->color;
+					float kd = glm::max(glm::dot(L, N), 0.0f);
+					float ks = glm::pow(glm::max(glm::dot(N, H), 0.0f), iObj->shininess);
+					
+					color += kd*iObj->md*Cl;
+					color += ks*iObj->ms*Cl;
+				}
+
+				view.setPixel(x, y, color);
+				pointLoc[1] -= halfWidth;
 			}
-			xCur += halfWidth;
-			yCur = halfWidth - view.d/2;
+			pointLoc[0] += halfWidth;
+			pointLoc[1] = halfWidth + view.d/2;
 		}
 
 		toPPM();
 	}
 
+	void printVec3(glm::vec3 vec){
+		std::cout << "(" << vec[0] << " ," << vec[1] << " ," << vec[2] << ")\n";
+	}
+
+
 	void toPPM() {
-		std::ofstream ofs("C:\\Users\\Lucid\\Documents\\Visual Studio 2015\\Projects\\RayTracer\\out.ppm", std::ios::out | std::ios::binary);
+		std::ofstream ofs("C:\\Users\\Lucid\\source\\repos\\raytracer\\out.ppm", std::ios::out | std::ios::binary);
 		ofs << "P6\n" << view.width << " " << view.height << "\n255\n";
-		for (int x = 0; x < view.width; ++x) {
-			for (int y = 0; y < view.height; y++) {
+		for (int y = 0; y < view.height; y++) {
+			for (int x = 0; x < view.width; x++) {
 				glm::vec3 pix = view.getPixel(x, y);
 				//printVec3(pix);
 				ofs << (unsigned char)(std::min(float(1), pix[0]) * 255) <<
