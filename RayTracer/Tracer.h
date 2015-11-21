@@ -29,22 +29,7 @@ public:
 
 	Tracer(){
 		scene.load(std::string("../1n.scn"));
-		//Sphere *s = new Sphere();
-		//s->xForm = glm::mat4(1.0f);
-		//s->xForm = glm::translate(s->xForm, glm::vec3(0, 3, 0));
-		//s->xForm = glm::translate(s->xForm, glm::vec3(2, 1, -10));
-		//s->xForm = glm::rotate(s->xForm, glm::radians(40.0f), glm::vec3(0, 0, 1));
-		//s->xForm = glm::translate(s->xForm, glm::vec3(0, 0, -3));
-
-		//s->ixForm = glm::inverse(s->xForm);
-		//s->ixtForm = glm::transpose(s->ixForm);
-		//scene.objects.push_back(s);
-
-		//Light *l = new Light();
-		//l->color = glm::vec3(1, 1, 1);
-		//l->pos = glm::vec4(-50.0, 5.0, -30.0, 1);
-		//scene.lights.push_back(l);
-
+	
 		float pixWidth = (2 * scene.view.d) / scene.view.width;
 		float halfWidth = scene.view.d / scene.view.height;
 
@@ -120,7 +105,7 @@ public:
 			pointLoc[1] = halfWidth + scene.view.d/2;
 		}
 
-		toPPM();
+		//toPPM();
 	}
 
 	void printVec3(glm::vec3 vec){
