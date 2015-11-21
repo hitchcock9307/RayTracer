@@ -12,6 +12,11 @@ public:
 	glm::vec3 ms = glm::vec3(1, .1, .1);
 	float shininess = 60.0;
 
+
+	glm::mat4 xForm;
+	glm::mat4 ixForm;
+	glm::mat4 ixtForm;
+
 	virtual Intersection intersect(Ray ray){
 		return Intersection();
 	}

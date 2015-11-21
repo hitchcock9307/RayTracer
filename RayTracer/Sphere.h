@@ -9,10 +9,6 @@
 class Sphere : public Object{
 private:
 public:
-	glm::vec3 sphereColor;
-	glm::mat4 xForm;
-	glm::mat4 ixForm;
-	glm::mat4 ixtForm;
 	Intersection intersect(Ray ray){
 		Intersection isec;
 
