@@ -80,18 +80,37 @@ public:
 					}
 				}
 
+				/* LIGHT CALCULATION */
 				for (Light* l : scene.lights){
 					if (iObj == NULL) break;
-					glm::vec3 L = glm::normalize(glm::vec3(l->pos - sIntersect.normal));
-					glm::vec3 V = glm::normalize(glm::vec3(cameraLoc - sIntersect.normal));
+
+					glm::vec3 L = glm::normalize(glm::vec3(glm::vec3(l->pos) - glm::vec3(sIntersect.point)));
+
+					Ray shadRay;
+					shadRay.direction = glm::vec4(L,0);
+					shadRay.point = sIntersect.point;
+
+					Intersection shadIntersect;
+					shadIntersect.distance = scene.view.clipDistance;
+					for (Object* o : scene.objects) {
+						cIntersect = o->intersect(shadRay);
+						if (cIntersect.distance > .01 && cIntersect.distance < shadIntersect.distance)
+							shadIntersect = cIntersect;
+					}
+					if (shadIntersect.distance != scene.view.clipDistance) continue;
+
+
+					glm::vec3 V = glm::normalize(glm::vec3(-sIntersect.v));
 					glm::vec3 N = glm::normalize(glm::vec3(sIntersect.normal));
 					glm::vec3 H = glm::normalize(L + V);
 					glm::vec3 Cl = l->color;
 					float kd = glm::max(glm::dot(L, N), 0.0f);
-					float ks = glm::pow(glm::max(glm::dot(N, H), 0.0f), iObj->shininess);
-					
+					float ks = glm::pow(glm::max(glm::dot(N, H), 0.0f), iObj->shininess*4);
+
 					color += kd*iObj->md*Cl;
 					color += ks*iObj->ms*Cl;
+
+					//color = glm::abs(N);
 				}
 
 				scene.view.setPixel(x, y, color);

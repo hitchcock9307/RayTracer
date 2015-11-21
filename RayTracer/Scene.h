@@ -31,15 +31,17 @@ public:
 		std::ifstream file(filename);
 
 		std::string line;
+
+		glm::mat4 xForm = glm::mat4(1.0f);
+		float shininess;
+		glm::vec3 diff, spec;
+
 		while (!file.eof()){
 			getline(file, line);
 			std::vector<std::string> args;
 			std::stringstream ss(line);
 			std::string token;
 
-			glm::mat4 xForm = glm::mat4(1.0f);
-			glm::vec3 diff, spec;
-			float shininess;
 
 			while (std::getline(ss, token, ' ')){
 				args.push_back(token);
@@ -52,7 +54,7 @@ public:
 				view.height = n;
 				view.width = n;
 				view.recalculate();
-				view.d = d;
+				view.d = d*2;
 
 			}
 			else if (!args[0].compare("sphere")){
@@ -67,13 +69,12 @@ public:
 
 				objects.push_back(sphere);
 
-				std::cout << "Sphere ";
 			}
 			else if (!args[0].compare("scale")){
 				float sx = atof(args[1].c_str());
 				float sy = atof(args[2].c_str());
 				float sz = atof(args[3].c_str());
-				xForm *= glm::scale(glm::mat4(1.0f), glm::vec3(sx, sy, sz));
+				xForm = glm::scale(xForm, glm::vec3(sx, sy, sz));
 
 			}
 			else if (!args[0].compare("move")){
@@ -87,7 +88,7 @@ public:
 				float rx = atof(args[2].c_str());
 				float ry = atof(args[3].c_str());
 				float rz = atof(args[4].c_str());
-				xForm *= glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(rx, ry, rz));
+				xForm = glm::rotate(xForm, glm::radians(angle), glm::vec3(rx, ry, rz));
 
 			}
 			else if (!args[0].compare("light")){
