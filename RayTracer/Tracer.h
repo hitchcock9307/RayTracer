@@ -95,7 +95,6 @@ public:
 					color += kd*iObj->md*Cl;
 					color += ks*iObj->ms*Cl;
 
-					//color = glm::abs(N);
 				}
 
 				scene.view.setPixel(x, y, color);
@@ -105,7 +104,7 @@ public:
 			pointLoc[1] = halfWidth + scene.view.d/2;
 		}
 
-		//toPPM();
+		toPPM();
 	}
 
 	void printVec3(glm::vec3 vec){
