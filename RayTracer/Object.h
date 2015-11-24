@@ -17,9 +17,7 @@ public:
 	glm::mat4 ixForm;
 	glm::mat4 ixtForm;
 
-	virtual Intersection intersect(Ray ray){
-		return Intersection();
-	}
+	virtual Intersection intersect(Ray ray){ return Intersection(); };
 };
 
 #endif

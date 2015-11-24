@@ -1,10 +1,11 @@
+#ifndef VIEWPORT_H
+#define VIEWPORT_H
+
 #include "Ray.h"
 
 #include <vector>
 #include <glm/vec3.hpp>
 
-#ifndef VIEWPORT_H
-#define VIEWPORT_H
 
 class Viewport{
 private:

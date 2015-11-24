@@ -1,8 +1,6 @@
-#include <glm/glm.hpp>
-
 #ifndef RAY_H
 #define RAY_H
-
+#include <glm/glm.hpp>
 
 class Ray{
 private:

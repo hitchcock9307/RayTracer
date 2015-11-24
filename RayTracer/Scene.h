@@ -3,7 +3,6 @@
 
 #include "Viewport.h"
 #include "Sphere.h"
-#include "Object.h"
 #include "Light.h"
 
 #include <glm\glm.hpp>
@@ -21,7 +20,7 @@ public:
 	std::vector<Light*> lights;
 
 	glm::vec3 backColor;
-	glm::vec3 ambColor;
+	glm::vec3 ambColor = glm::vec3(0,0,0);
 
 	Scene(){
 	}
@@ -33,8 +32,13 @@ public:
 		std::string line;
 
 		glm::mat4 xForm = glm::mat4(1.0f);
-		float shininess;
+		float shininess = 0;
 		glm::vec3 diff, spec;
+
+		std::vector<glm::mat4> groups(200);
+		groups.push_back(xForm);
+		int currentGroup = 0;
+
 
 		while (!file.eof()){
 			getline(file, line);
@@ -42,11 +46,13 @@ public:
 			std::stringstream ss(line);
 			std::string token;
 
-
+			//std::cout << "Line!\n";
 			while (std::getline(ss, token, ' ')){
+				if (token.length() == 0) continue;
 				args.push_back(token);
 			}
-			if (args.size() == 0) break;
+			if (args.size() == 0) continue;
+			
 
 			if (!args[0].compare("view")){
 				float n = atof(args[1].c_str());
@@ -59,8 +65,8 @@ public:
 			}
 			else if (!args[0].compare("sphere")){
 				Sphere* sphere = new Sphere();
-				sphere->xForm = xForm;
-				sphere->ixForm = glm::inverse(xForm);
+				sphere->xForm = groups[currentGroup];
+				sphere->ixForm = glm::inverse(groups[currentGroup]);
 				sphere->ixtForm = glm::transpose(sphere->ixForm);
 
 				sphere->md = diff;
@@ -74,21 +80,21 @@ public:
 				float sx = atof(args[1].c_str());
 				float sy = atof(args[2].c_str());
 				float sz = atof(args[3].c_str());
-				xForm = glm::scale(xForm, glm::vec3(sx, sy, sz));
+				groups[currentGroup] = glm::scale(groups[currentGroup], glm::vec3(sx, sy, sz));
 
 			}
 			else if (!args[0].compare("move")){
 				float tx = atof(args[1].c_str());
 				float ty = atof(args[2].c_str());
 				float tz = atof(args[3].c_str());
-				xForm = glm::translate(xForm, glm::vec3(tx, ty, tz));
+				groups[currentGroup] = glm::translate(groups[currentGroup], glm::vec3(tx, ty, tz));
 			}
 			else if (!args[0].compare("rotate")){
 				float angle = atof(args[1].c_str());
 				float rx = atof(args[2].c_str());
 				float ry = atof(args[3].c_str());
 				float rz = atof(args[4].c_str());
-				xForm = glm::rotate(xForm, glm::radians(angle), glm::vec3(rx, ry, rz));
+				groups[currentGroup] = glm::rotate(groups[currentGroup], glm::radians(angle), glm::vec3(rx, ry, rz));
 
 			}
 			else if (!args[0].compare("light")){
@@ -119,10 +125,12 @@ public:
 
 			}
 			else if (!args[0].compare("group")){
-
+				groups[currentGroup+1] = groups[currentGroup];
+			    currentGroup++;
 			}
 			else if (!args[0].compare("groupend")){
-				xForm = glm::mat4(1.0f);
+				//groups.pop_back();
+				currentGroup--;
 			}
 			else if (!args[0].compare("material")){
 				float dr = atof(args[1].c_str());
@@ -140,7 +148,6 @@ public:
 			else if (!args[0].compare("refraction")){
 
 			}
-
 		}
 
 
