@@ -7,8 +7,8 @@
 class Light{
 private:
 public:
-	glm::vec4 pos;
-	glm::vec3 color;
+	glm::dvec4 pos;
+	glm::dvec3 color;
 
 };
 

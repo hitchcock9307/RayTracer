@@ -2,19 +2,19 @@
 #define INTERSECTION_H
 
 #include <glm/glm.hpp>
-
-
+#include "Object.h"
+class Object;
 class Intersection{
 private:
 public:
 	Intersection(){
-		//obj = NULL;
+		obj = NULL;
 	}
 
-	//Object *obj;
-	glm::vec4 point;
-	glm::vec4 normal;
-	glm::vec4 v;
+	Object *obj;
+	glm::dvec4 point;
+	glm::dvec4 normal;
+	glm::dvec4 v;
 	float distance = -1;
 };
 

@@ -19,8 +19,11 @@ public:
 	std::vector<Object*> objects;
 	std::vector<Light*> lights;
 
-	glm::vec3 backColor;
-	glm::vec3 ambColor = glm::vec3(0,0,0);
+	glm::dvec3 backColor;
+	glm::dvec3 ambColor = glm::dvec3(0,0,0);
+
+	double delta = .001;
+	int maxDepth = 10000;
 
 	Scene(){
 	}
@@ -31,11 +34,11 @@ public:
 
 		std::string line;
 
-		glm::mat4 xForm = glm::mat4(1.0f);
-		float shininess = 0;
-		glm::vec3 diff, spec;
+		glm::dmat4 xForm = glm::dmat4(1.0);
+		double shininess = 0;
+		glm::dvec3 diff, spec;
 
-		std::vector<glm::mat4> groups(200);
+		std::vector<glm::dmat4> groups(200);
 		groups.push_back(xForm);
 		int currentGroup = 0;
 
@@ -55,8 +58,8 @@ public:
 			
 
 			if (!args[0].compare("view")){
-				float n = atof(args[1].c_str());
-				float d = atof(args[2].c_str());
+				double n = atof(args[1].c_str());
+				double d = atof(args[2].c_str());
 				view.height = n;
 				view.width = n;
 				view.recalculate();
@@ -77,51 +80,51 @@ public:
 
 			}
 			else if (!args[0].compare("scale")){
-				float sx = atof(args[1].c_str());
-				float sy = atof(args[2].c_str());
-				float sz = atof(args[3].c_str());
-				groups[currentGroup] = glm::scale(groups[currentGroup], glm::vec3(sx, sy, sz));
+				double sx = atof(args[1].c_str());
+				double sy = atof(args[2].c_str());
+				double sz = atof(args[3].c_str());
+				groups[currentGroup] = glm::scale(groups[currentGroup], glm::dvec3(sx, sy, sz));
 
 			}
 			else if (!args[0].compare("move")){
-				float tx = atof(args[1].c_str());
-				float ty = atof(args[2].c_str());
-				float tz = atof(args[3].c_str());
-				groups[currentGroup] = glm::translate(groups[currentGroup], glm::vec3(tx, ty, tz));
+				double tx = atof(args[1].c_str());
+				double ty = atof(args[2].c_str());
+				double tz = atof(args[3].c_str());
+				groups[currentGroup] = glm::translate(groups[currentGroup], glm::dvec3(tx, ty, tz));
 			}
 			else if (!args[0].compare("rotate")){
-				float angle = atof(args[1].c_str());
-				float rx = atof(args[2].c_str());
-				float ry = atof(args[3].c_str());
-				float rz = atof(args[4].c_str());
-				groups[currentGroup] = glm::rotate(groups[currentGroup], glm::radians(angle), glm::vec3(rx, ry, rz));
+				double angle = atof(args[1].c_str());
+				double rx = atof(args[2].c_str());
+				double ry = atof(args[3].c_str());
+				double rz = atof(args[4].c_str());
+				groups[currentGroup] = glm::rotate(groups[currentGroup], (double)glm::radians(angle), glm::dvec3(rx, ry, rz));
 
 			}
 			else if (!args[0].compare("light")){
-				float r = atof(args[1].c_str());
-				float g = atof(args[2].c_str());
-				float b = atof(args[3].c_str());
-				float x = atof(args[4].c_str());
-				float y = atof(args[5].c_str());
-				float z = atof(args[6].c_str());
+				double r = atof(args[1].c_str());
+				double g = atof(args[2].c_str());
+				double b = atof(args[3].c_str());
+				double x = atof(args[4].c_str());
+				double y = atof(args[5].c_str());
+				double z = atof(args[6].c_str());
 				Light *l = new Light();
-				l->color = glm::vec3(r, g, b);
-				l->pos = glm::vec4(x, y, z, 1);
+				l->color = glm::dvec3(r, g, b);
+				l->pos = glm::dvec4(x, y, z, 1);
 				lights.push_back(l);
 
 			}
 			else if (!args[0].compare("background")){
-				float r = atof(args[1].c_str());
-				float g = atof(args[2].c_str());
-				float b = atof(args[3].c_str());
-				backColor = glm::vec3(r, g, b);
+				double r = atof(args[1].c_str());
+				double g = atof(args[2].c_str());
+				double b = atof(args[3].c_str());
+				backColor = glm::dvec3(r, g, b);
 
 			}
 			else if (!args[0].compare("ambient")){
-				float r = atof(args[1].c_str());
-				float g = atof(args[2].c_str());
-				float b = atof(args[3].c_str());
-				ambColor = glm::vec3(r, g, b);
+				double r = atof(args[1].c_str());
+				double g = atof(args[2].c_str());
+				double b = atof(args[3].c_str());
+				ambColor = glm::dvec3(r, g, b);
 
 			}
 			else if (!args[0].compare("group")){
@@ -133,17 +136,17 @@ public:
 				currentGroup--;
 			}
 			else if (!args[0].compare("material")){
-				float dr = atof(args[1].c_str());
-				float dg = atof(args[2].c_str());
-				float db = atof(args[3].c_str());
-				float sr = atof(args[4].c_str());
-				float sg = atof(args[5].c_str());
-				float sb = atof(args[6].c_str());
-				float p = atof(args[7].c_str());
+				double dr = atof(args[1].c_str());
+				double dg = atof(args[2].c_str());
+				double db = atof(args[3].c_str());
+				double sr = atof(args[4].c_str());
+				double sg = atof(args[5].c_str());
+				double sb = atof(args[6].c_str());
+				double p = atof(args[7].c_str());
 
 				shininess = p;
-				diff = glm::vec3(dr, dg, db);
-				spec = glm::vec3(sr, sg, sb);
+				diff = glm::dvec3(dr, dg, db);
+				spec = glm::dvec3(sr, sg, sb);
 			}
 			else if (!args[0].compare("refraction")){
 
