@@ -12,6 +12,7 @@
 #include <string>
 #include <fstream>
 
+
 class Scene{
 private:
 public:
@@ -22,24 +23,32 @@ public:
 	glm::dvec3 backColor;
 	glm::dvec3 ambColor = glm::dvec3(0,0,0);
 
-	double delta = .001;
-	int maxDepth = 10000;
+	double delta = .00001;
+	int maxDepth = 1;
 
 	Scene(){
 	}
 
 	void load(std::string filename){
+		globalTransform = glm::dmat4(1.0f);
 
 		std::ifstream file(filename);
 
 		std::string line;
 
-		glm::dmat4 xForm = glm::dmat4(1.0);
 		double shininess = 0;
 		glm::dvec3 diff, spec;
 
+#if USESDL
+		SDL_Surface* texture = NULL, *specMap = NULL;
+#endif
+
+		bool textured[200] = { false };
+
 		std::vector<glm::dmat4> groups(200);
-		groups.push_back(xForm);
+
+		
+		groups.push_back(glm::dmat4(1.0));
 		int currentGroup = 0;
 
 
@@ -49,14 +58,14 @@ public:
 			std::stringstream ss(line);
 			std::string token;
 
-			//std::cout << "Line!\n";
+			//Split on spaces
 			while (std::getline(ss, token, ' ')){
 				if (token.length() == 0) continue;
-				args.push_back(token);
+				args.push_back(token); //push back tokens
 			}
 			if (args.size() == 0) continue;
 			
-
+			//Read in view property
 			if (!args[0].compare("view")){
 				double n = atof(args[1].c_str());
 				double d = atof(args[2].c_str());
@@ -65,8 +74,8 @@ public:
 				view.recalculate();
 				view.d = d*2;
 
-			}
-			else if (!args[0].compare("sphere")){
+			}//Read in sphere, set the properties, push to objects
+			else if (!args[0].compare("sphere")) {
 				Sphere* sphere = new Sphere();
 				sphere->xForm = groups[currentGroup];
 				sphere->ixForm = glm::inverse(groups[currentGroup]);
@@ -76,22 +85,27 @@ public:
 				sphere->ms = spec;
 				sphere->shininess = shininess;
 
+				sphere->textured = textured[currentGroup]; //Textures :D
+#if USESDL
+				sphere->image = texture;
+				sphere->specMap = specMap;
+#endif
 				objects.push_back(sphere);
 
-			}
+			}//Scale the current group
 			else if (!args[0].compare("scale")){
 				double sx = atof(args[1].c_str());
 				double sy = atof(args[2].c_str());
 				double sz = atof(args[3].c_str());
 				groups[currentGroup] = glm::scale(groups[currentGroup], glm::dvec3(sx, sy, sz));
 
-			}
+			}//translate the group
 			else if (!args[0].compare("move")){
 				double tx = atof(args[1].c_str());
 				double ty = atof(args[2].c_str());
 				double tz = atof(args[3].c_str());
 				groups[currentGroup] = glm::translate(groups[currentGroup], glm::dvec3(tx, ty, tz));
-			}
+			}//Rotate the group
 			else if (!args[0].compare("rotate")){
 				double angle = atof(args[1].c_str());
 				double rx = atof(args[2].c_str());
@@ -99,7 +113,7 @@ public:
 				double rz = atof(args[4].c_str());
 				groups[currentGroup] = glm::rotate(groups[currentGroup], (double)glm::radians(angle), glm::dvec3(rx, ry, rz));
 
-			}
+			}//Create a light object
 			else if (!args[0].compare("light")){
 				double r = atof(args[1].c_str());
 				double g = atof(args[2].c_str());
@@ -112,29 +126,31 @@ public:
 				l->pos = glm::dvec4(x, y, z, 1);
 				lights.push_back(l);
 
-			}
+			}//Set background color
 			else if (!args[0].compare("background")){
 				double r = atof(args[1].c_str());
 				double g = atof(args[2].c_str());
 				double b = atof(args[3].c_str());
 				backColor = glm::dvec3(r, g, b);
 
-			}
+			}//Set ambient color
 			else if (!args[0].compare("ambient")){
 				double r = atof(args[1].c_str());
 				double g = atof(args[2].c_str());
 				double b = atof(args[3].c_str());
 				ambColor = glm::dvec3(r, g, b);
 
-			}
+			}//Create group (push move up group counter and copy transform)
 			else if (!args[0].compare("group")){
+				textured[currentGroup + 1] = textured[currentGroup];
 				groups[currentGroup+1] = groups[currentGroup];
 			    currentGroup++;
-			}
+			}//End group, decrement current group (safe, will be copied)
 			else if (!args[0].compare("groupend")){
 				//groups.pop_back();
+				textured[currentGroup] = false;
 				currentGroup--;
-			}
+			}//Get all material properties :(
 			else if (!args[0].compare("material")){
 				double dr = atof(args[1].c_str());
 				double dg = atof(args[2].c_str());
@@ -147,7 +163,15 @@ public:
 				shininess = p;
 				diff = glm::dvec3(dr, dg, db);
 				spec = glm::dvec3(sr, sg, sb);
-			}
+			}//Load in the texture files
+			else if (!args[0].compare("texture")) {
+#if USESDL
+				textured[currentGroup] = true;
+
+				texture = IMG_Load(args[1].c_str());
+				specMap = IMG_Load(args[2].c_str());
+#endif
+			}//Maybe implement later, maybe
 			else if (!args[0].compare("refraction")){
 
 			}
