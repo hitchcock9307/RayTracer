@@ -125,11 +125,37 @@ public:
 					scene.view.setPixel(x, y, color);
 				}
 				//Swap buffer
-				globalTransform = glm::translate(globalTransform, glm::dvec3(0, 0, .0001));
+				//globalTransform = glm::translate(globalTransform, glm::dvec3(0, 0, .0001));
 #if USESDL
-				SDL_UpdateWindowSurface(window);
+
 			}
 #endif
+			SDL_UpdateWindowSurface(window);
+			double moveSpeed = .1;
+
+			SDL_Event event;
+			while (SDL_PollEvent(&event)) {
+				if (event.type == SDL_KEYDOWN) {
+					if (event.key.keysym.sym == SDLK_w) {
+						globalTransform = glm::translate(globalTransform, glm::dvec3(0, 0, moveSpeed));
+					}
+					else if (event.key.keysym.sym == SDLK_s) {
+						globalTransform = glm::translate(globalTransform, glm::dvec3(0, 0, -moveSpeed));
+					}
+					else if (event.key.keysym.sym == SDLK_a) {
+						globalTransform = glm::translate(globalTransform, glm::dvec3(moveSpeed, 0, 0));
+					}
+					else if (event.key.keysym.sym == SDLK_d) {
+						globalTransform = glm::translate(globalTransform, glm::dvec3(-moveSpeed, 0, 0));
+					}
+					else if (event.key.keysym.sym == SDLK_UP) {
+						globalTransform = glm::translate(globalTransform, glm::dvec3(0, moveSpeed, 0));
+					}
+					else if (event.key.keysym.sym == SDLK_DOWN) {
+						globalTransform = glm::translate(globalTransform, glm::dvec3(0, -moveSpeed, 0));
+					}
+				}
+			}
 		}
 	}
 
@@ -175,8 +201,7 @@ public:
 		//For each light
 		for (Light* l : scene.lights) {
 			//Calculate vector to the light
-			glm::dvec4 lightPos = l->pos;
-			glm::dvec3 L = glm::normalize(glm::dvec3(lightPos - sIntersect.point));
+			glm::dvec3 L = glm::normalize(glm::dvec3(globalTransform*(l->pos - sIntersect.point)));
 
 			//Calculate shadow ray
 			Ray shadRay;

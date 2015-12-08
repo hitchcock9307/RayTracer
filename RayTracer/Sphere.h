@@ -14,10 +14,13 @@ private:
 public:
 	Intersection intersect(Ray ray){
 		Intersection isec;
+		glm::dmat4 txForm = globalTransform*xForm;
+		glm::dmat4 tixForm = glm::inverse(txForm);
+		glm::dmat4 tixtForm = glm::transpose(tixForm);
 
 		//Create convenience variables (ignore speed :P)
-		glm::dvec4 v = ixForm*globalTransform*ray.direction;
-		glm::dvec4 u = ixForm*globalTransform*ray.point;
+		glm::dvec4 v = tixForm*ray.direction;
+		glm::dvec4 u = tixForm*ray.point;
 		glm::dvec3 v3 = glm::dvec3(v);
 		glm::dvec3 u3 = glm::dvec3(u);
 
@@ -50,8 +53,8 @@ public:
 		//if neg, return and let outer loop continue
 		if (tUse != -1) {
 			glm::dvec4 intersectPoint = glm::dvec4(u3 + v3*tUse, 1.0); //Calc hit point
-			isec.point = xForm*intersectPoint; // transform back (no scaling issues)
-			isec.normal = ixtForm*intersectPoint; //inverse transpoe transform back (because normal scales differently)
+			isec.point = txForm*intersectPoint; // transform back (no scaling issues)
+			isec.normal = tixtForm*intersectPoint; //inverse transpoe transform back (because normal scales differently)
 			isec.v = v; //Need the view vector (really the negative but meh)
 			isec.obj = this; //Pass me back
 			isec.distance = tUse; // distance to compare closest object
